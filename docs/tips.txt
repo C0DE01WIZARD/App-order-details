@@ -112,6 +112,7 @@ docker exec -it  my-redis redis-cli - подключение к редису
 13)git config -h - вывод опций конфига
    git config --global user.name "Your Name" # создание имени
    git config --global user.email "yourname@email.com" # создание электронной почты
+14)git stash - сохранить свои локальные изменения
 
 REDIS:
 1) redis-server - ЗАПУСК СЕРВЕРА
