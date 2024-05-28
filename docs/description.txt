@@ -13,6 +13,8 @@
 Файлы:
 1) launch.json - файл конфигурации
 2) README.md - общее описание проекта.
+3) Makefile - используется для автоматизации процесса сборки, тестирования, запуска и управления вашим проектом на Go
+
 
 Директории:
 1)/cmd - точка входа для нашего приложения
@@ -36,3 +38,166 @@
 1) database/sql - интерфейс для взаимодействия с БД, открыть соединение, выполнить запросы, закрыть соединение
 2) go get github.com/lib/pq - установка драйвера 'pq'
 3) sudo -i -u postgres && psql - переключение на postgres
+
+
+
+CELERY:
+*Flower - это веб-инструмент для мониторинга и администрирования Celery в режиме реального времени
+
+
+PIP:
+*pip freeze > requirements.txt - перенос установленных зависимостей в reuirements.txt
+*pip freeze requirements.txt — команда, которая позволяет создать текстовый документ,
+в котором перечислены все установленные и необходимые для работы Python
+приложения программные пакеты.
+
+HOSTS:
+*sudo netstat -tulpn | grep LISTEN - просмотр всех работающий портов
+*sudo ss -lptn 'sport = :5432' - просмотр порта 5432
+*pg_isready -h 127.0.0.1 -p 5432 -U bot  -d bot - тестирование PSQL
+*telnet localhost 5432 - подключение к ХОСТУ 5432
+
+
+SQL:
+
+    SELECT — выбери данные
+    FROM — вот отсюда
+    JOIN — добавь еще эти таблицы
+    WHERE — при таком условии
+    GROUP BY — сгруппируй данные по этому признаку
+    ORDER BY — отсортируй данные по этому признаку
+    LIMIT — нужно такое количество результатов
+    ; — конец предложения
+
+
+DB(Postgres):
+
+с shell, получить полезную информацию
+*sudo -u postgres psql - для работы с POSTGRESQL
+*\c 'название БД' - подключение к БД
+*sudo systemctl is-enabled postgresql - проверка включения службы Postgresql
+*sudo su - postgres - для работы с Postgresql
+*psql - командная оболочка
+*pg_config --version - узнать версию Posgresql
+*CREATE TABLE 'имя таблицы' (
+ );- создать таблицу
+*\d test_db - просмотр таблицы БД
+*DROP DATABASE - удаление БД
+*DROP TABLE 'название таблицы' - удаление таблицы
+
+POSTGRESQL(Create db and user):
+1) sudo -u postgres psql - войти в интерактивную строку
+2) CREATE DATABASE s_engineer; - создание БД название
+3) CREATE USER s_engineer WITH PASSWORD 'password'; - создание
+пользователя базы данных и пароля
+4) ALTER ROLE s_engineer SET client_encoding TO 'utf8'; - шифрование по умолчанию
+нужно установить на UTF-8
+5) ALTER ROLE s_engineer SET default_transaction_isolation TO 'read committed'; -
+ Схемой изоляции транзакций по умолчанию нужно выбрать read committed,
+она блокирует чтение транзакций, по которым не было коммитов
+6) ALTER ROLE s_engineer SET timezone TO 'UTC'; - по умолчанию проекты Django
+используют UTC (так рекомендует сам проект Django)
+7) GRANT ALL PRIVILEGES ON DATABASE myproject TO s_engineer; - предоставление пользователю
+ БД права доступа к базе данных
+
+
+DOCKER:
+Docker — это набор инструментов,
+с помощью которого можно создавать,
+управлять и запускать приложения в контейнерах.
+docker run hello-world - запуск тестового докера
+docker build - запуск Dockerfile
+docker build -t '' . - сборка образа из корневого каталога "."
+docker-compose build — сборка образа из docker-compose.yml
+docker-compose down — выключить все запущенные контейнеры из docker-compose.yml
+docker-compose exec <container> <command> — позволяет выполнить определенную команду внутри контейнера
+docker images list — отображает локальный список образов
+docker ps — отображает запущенные контейнеры
+docker ps -a - просмотр всех запущенных контейнеров и которые уже закрыты
+docker log -f <container> — показывает лог работы контейнера (стандартный вывод)
+docker-compose stop <container> — останавливает контейнер
+docker stats — отображает статистику потребления ресурсов контейнерами
+
+
+
+DOCKER-COMPOSE:
+Инструмент, помогающий определять и запускать приложения,
+для которых требуются несколько сервисов.
+*docker-compose up - запуск Docker - compose
+
+
+Celery+Redis
+порт Redis=6379
+pip install celery - устанвока Celery
+python -m celery worker - запуск очереди задач
+sudo apt install redis - установка Redis для Celery как брокера задач
+redis-cli - проверка связи с сервером Redis
+python -m pip install redis - установка клиента для взаимодействия с Redis
+python -m celery -A "название приложения" worker - запуск Celery
+docker run --name my-redis -d redis - запуск редиса в контейнере докер
+docker exec -it  my-redis redis-cli - подключение к редису
+
+
+
+1)git init - добавить, инициализировать GIT, создать новый GIT
+2)git status - чтоб увидеть изменения
+3)git add -A - добавление изменений в git
+4)git commit -m 'название коммита' - отслеживание изменений
+5)git checkout -b "название ветки" - создание новой ветки
+6)git checkout 'название ветки' - переключение на ветку мастера
+7)git log - просмотреть коммиты
+  git log --oneline # упрощенный вид гит логов
+8)git remote add <repository_name> link - для связывания локального и удаленного репозитория
+9)git branch -v - информация о ветке и ок коммите
+10)git checkout -b 'название ветки' = branch + checkout
+11)git stash - собирает незакомиченные изменения и собирает в архив
+12)git config --list - просмотр параметров конфигурации
+13)git config -h - вывод опций конфига
+   git config --global user.name "Your Name" # создание имени
+   git config --global user.email "yourname@email.com" # создание электронной почты
+14)git stash - сохранить свои локальные изменения
+
+REDIS:
+1) redis-server - ЗАПУСК СЕРВЕРА
+2) redis-cli - ПРОВЕРКА СОЕДИНЕНИЯ
+127.0.0.1:6379> ping # ввод слова ping и получение ответа PONG
+
+
+LINUX КОМАНДЫ:
+1) ls - просмотр содержимого директории
+2) pwd - просмотр пути директории
+3) mkdir - создание директории
+4) cd .. - переход на уровень выше по директории
+5) cd название каталог - переход к опреденной директории
+6) cp - копирование из одного каталога в другой (пример "cd dir1/dir2") - копирование из dir1 в dir2
+7) rm название файла или директории - удаление
+8) mv("move") - перемещение файла или директории
+9) cp -r - скопировать директорию
+10) cat - прочитать содержимое файла
+11) df -h - просмотр разделов
+12) cat /proc/meminfo - просмотр размера ОЗУ
+13) top - запущенные задачи
+14) touch 'название файла'- создание файла
+
+Работа с ядрами Linux:
+1) sudo uname -a - установленное актуальное ядро системы
+2) apt list --installed | egrep "linux-image|linux-headers" - какие версии установлены
+3) dpkg --list | egrep "linux-image|linux-headers" - какие ядра установлены
+
+
+        Команды консоли
+• cd (изменить каталог)
+• cd .. (перейти в верх)
+• ls (список файлов в текущем каталоге)
+• pwd ( вывести текущий каталог)
+• mkdir (создать каталог)
+• touch (создать новый файл)
+
+        КОДЫ
+100-199 - информационные
+200-299 - успешно
+300-399 - перенаправление
+400-499 - недоступность, ошибка сайта
+500-599 - ошибка на стороне сервера
+
+
