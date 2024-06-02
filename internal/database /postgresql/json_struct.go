@@ -1,9 +1,10 @@
 package main
 
 import (
-	"database/sql"
+	//"database/sql"
 	"encoding/json"
 	"fmt"
+	//"log"
 
 	_ "github.com/lib/pq"
 )
@@ -63,31 +64,10 @@ type Order struct {
 }
 
 func main() {
-	db, err := sql.Open("postgres", "host=localhost port=5432 user=postgres password=secret dbname=mydb sslmode=disable")
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
+    u := Order{}
+		u.TrackNumber = "123"
 
-	orderJSON := `{"order_uid": "b563feb7b2b84b6test", "track_number": "WBILMTESTTRACK", ...}`
+    bs, _ := json.Marshal(u)
 
-	var order Order
-	err = json.Unmarshal([]byte(orderJSON), &order)
-	if err != nil {
-		panic(err)
-	}
-
-	// Сериализация структуры заказа в JSON
-	serializedOrder, err := json.Marshal(order)
-	if err != nil {
-		panic(err)
-	}
-
-	// Сохранение сериализованного заказа в базу данных
-	_, err = db.Exec("INSERT INTO orders(data) VALUES($1)", serializedOrder)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Заказ сохранен в базе данных.")
+    fmt.Println(string(bs),"<Ответ JSON",) 
 }
