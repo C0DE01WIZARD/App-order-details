@@ -71,3 +71,14 @@ func main() {
 
     fmt.Println(string(bs),"<Ответ JSON",) 
 }
+
+template_html, err := template.ParseFiles("templates/order_details.html")
+	if err != nil {
+		panic(err)
+	}
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		template_html.Execute(w, nil)
+	})
+
+	http.ListenAndServe(":8080", nil)
