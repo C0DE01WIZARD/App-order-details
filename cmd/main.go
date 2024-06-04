@@ -71,16 +71,16 @@ template_html, err := template.ParseFiles("templates/order_details.html")
 	http.ListenAndServe(":8080", nil)
 	
 	// Подключение к базе данных PostgreSQL
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	Psql_info := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", host, port, user, password, dbname) //инкапсуляция параметров подключения
 
-	db, err := sql.Open("postgres", psqlInfo)
+	order_db, err := sql.Open("postgres", Psql_info)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer order_db.Close()
 
 	// Проверка подключения к базе данных Postgresql
-	err = db.Ping()
+	err = order_db.Ping()
 	if err != nil {
 		log.Fatal("Ошибка при подключении к базе данных:", err)
 	}
@@ -154,11 +154,13 @@ CREATE TABLE IF NOT EXISTS messages(
 `
 
 // Выполнение запроса на создание таблицы
-	_, err = db.Exec(createTable)
+	_, err = order_db.Exec(createTable)
 	if err != nil { // обработка ошибок БД
 		log.Fatal(err)
 	}
 	fmt.Println("Таблица dbname успешно создана и работает на порту:", port)
+
+	
 
 
 	// Данные для соединение с сервером NATS Streaming
@@ -181,7 +183,7 @@ CREATE TABLE IF NOT EXISTS messages(
 		
 		// Запись данных в БД
 	content := "Запись в БД"
-		_, err := db.Exec("INSERT INTO messages (content) VALUES($1)", content)  
+		_, err := order_db.Exec("INSERT INTO messages (content) VALUES($1)", content)  
 		if err != nil { // обработка ошибки записи в БД
 			log.Fatalf("Ошибка при записи в базу данных: %v", err)
 		}
