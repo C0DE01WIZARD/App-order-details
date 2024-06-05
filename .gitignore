@@ -1,3 +1,4 @@
 cmd/.env
 docs/description.txt
 .vscode/nats-streaming-server.conf
+docs/description.txt

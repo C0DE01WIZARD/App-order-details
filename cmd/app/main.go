@@ -1,18 +1,19 @@
 package main
 
 import (
-	"html/template"
-	"database/sql" // пакет для работы с БД 
-	"sync"
-	"net/http"
-	_"encoding/json"
-	"fmt" // функция для форматирования строк
-	"log" // 
+	"database/sql"  // пакет для работы с БД
+	"fmt"           // Импорт функции для форматирования строк
+	"html/template" // Импорт пакета template для работы с HTML-шаблонами
+	"log"           // Импорт пакета для логирования
+	"net/http"      // Импорт пакета http для создания HTTP-сервера
 	"runtime"
-	_ "github.com/lib/pq" // драйвер для соединения с сервером PSQL
-	"github.com/nats-io/stan.go"
-)
+	"sync"
+	"time"
 
+	_ "github.com/lib/pq" //Импот драйвера для соединения с сервером PSQL
+	"github.com/nats-io/stan.go"
+	"github.com/patrickmn/go-cache" // Импорт пакета go-cache для кэширования данных
+)
 
 /* Функция для восстановления кэша из БД, вызывается в начале функции main
 для того чтобы кэш восстаавливался перед началом обработки запросов*/
@@ -42,9 +43,115 @@ func (c *Cache) RestoreFromDB(db *sql.DB) error {
     return nil
 }
 
+type Delivery struct {
+	Name    string `json:"name"`
+	Phone   string `json:"phone"`
+	Zip     string `json:"zip"`
+	City    string `json:"city"`
+	Address string `json:"address"`
+	Region  string `json:"region"`
+	Email   string `json:"email"`
+}
+
+type Payment struct {
+	Transaction   string  `json:"transaction"`
+	RequestId     string  `json:"request_id"`
+	Currency      string  `json:"currency"`
+	Provider      string  `json:"provider"`
+	Amount        int     `json:"amount"`
+	PaymentDt     int     `json:"payment_dt"`
+	Bank          string  `json:"bank"`
+	DeliveryCost  int     `json:"delivery_cost"`
+	GoodsTotal    int     `json:"goods_total"`
+	CustomFee     int     `json:"custom_fee"`
+}
+
+type Item struct {
+	ChrtID      int    `json:"chrt_id"`
+	TrackNumber string `json:"track_number"`
+	Price       int    `json:"price"`
+	RID         string `json:"rid"`
+	Name        string `json:"name"`
+	Sale        int    `json:"sale"`
+	Size        string `json:"size"`
+	TotalPrice  int    `json:"total_price"`
+	NmID        int    `json:"nm_id"`
+	Brand       string `json:"brand"`
+	Status      int    `json:"status"`
+}
+
+type Order struct {
+	OrderUID         string    `json:"order_uid"`
+	TrackNumber      string    `json:"track_number"`
+	Entry            string    `json:"entry"`
+	Delivery         Delivery  `json:"delivery"`
+	Payment          Payment   `json:"payment"`
+	Items            []Item    `json:"items"`
+	Locale           string    `json:"locale"`
+	InternalSignature string    `json:"internal_signature"`
+	CustomerID       string    `json:"customer_id"`
+	DeliveryService  string    `json:"delivery_service"`
+	ShardKey         string    `json:"shardkey"`
+	SmID             int       `json:"sm_id"`
+	DateCreated      string    `json:"date_created"`
+	OofShard         string    `json:"oof_shard"`
+ 
+}
+
+
+func New_Cache() *cache.Cache {
+	// Создаем кэш с 5 минутами по умолчанию для каждого элемента и чисткой каждые 10 минут
+	return cache.New(5*time.Minute, 10*time.Minute)
+}
+
 
 func main() {
-    // Данные для подключения к БД
+ 
+var cache = New_Cache()
+	const DefaultExpiration = 5 * time.Minute	
+// Заполняем кэш тестовыми данными
+	cache.Set("b563feb7b2b84b6test", 
+	Order{OrderUID: "b563feb7b2b84b6test", 
+	TrackNumber: "WBILMTESTTRACK", 
+	Entry: "WBIL",
+	
+	}, 
+	DefaultExpiration)
+	
+	
+	
+	// шаблон HTML
+	tmpl, err := template.ParseFiles("templates/order_details.html")
+	if err != nil {
+		panic(err)
+	}
+
+
+
+	// Обработчик HTTP-запросов
+	fs := http.FileServer(http.Dir("static"))
+    http.Handle("/static/", http.StripPrefix("/static/", fs))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Получаем ID из запроса
+		id := r.URL.Query().Get("id")
+		var orderData Order
+
+		if id != "" {
+			if value, ok := cache.Get(id); ok {
+				orderData = value.(Order)
+			}
+		}
+
+		// Отображаем шаблон с данными
+		tmpl.Execute(w, orderData)
+	})
+
+	// Запускаем сервер
+	log.Println("Сервер запущен на http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+
+
+	   // Данные для подключения к БД
  const (
 	host = "localhost"
 	port = 5432
@@ -52,24 +159,6 @@ func main() {
 	password = "password"
 	dbname = "order_db"
 )
-
-template_html, err := template.ParseFiles("templates/order_details.html")
-	if err != nil {
-		panic(err)
-	}
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Query().Get("id")
-		if id == "" {
-            http.Error(w, "Не указан ID", http.StatusBadRequest)
-            return
-        }
-				
-		template_html.Execute(w, nil)
-	})
-
-	http.ListenAndServe(":8080", nil)
-	
 	// Подключение к базе данных PostgreSQL
 	Psql_info := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable", host, port, user, password, dbname) //инкапсуляция параметров подключения
 
@@ -147,7 +236,7 @@ CREATE TABLE IF NOT EXISTS items (
     FOREIGN KEY (order_uid) REFERENCES orders (order_uid)
 );
 
-CREATE TABLE IF NOT EXISTS messages(
+CREATE TABLE IF NOT EXISTS messages( 
 	  id SERIAL PRIMARY KEY,
 		content TEXT NOT NULL
 );
@@ -159,8 +248,6 @@ CREATE TABLE IF NOT EXISTS messages(
 		log.Fatal(err)
 	}
 	fmt.Println("Таблица dbname успешно создана и работает на порту:", port)
-
-	
 
 
 	// Данные для соединение с сервером NATS Streaming
@@ -198,6 +285,7 @@ CREATE TABLE IF NOT EXISTS messages(
 	runtime.Goexit()
 }
 
+
 /*2.3 Реализовать кэширование полученных данных в сервисе (сохранять in memory)
  Структура для хранения кэша */
 
@@ -228,17 +316,3 @@ func(c *Cache) Get(key string) (string, bool) {
 	return val, ok
 }
 
-func Create_cash() {
-	// Создание кэша
-	cache := NewCache()
-
-	// Добавление данных в кэш
-	cache.Set("ключ", "значение")
-
-	// Получение данных из кэша
-	if val, ok := cache.Get("ключ"); ok {
-		println("Найдено в кэше:", val)
-		} else {
-		println("Значение не найдено в кэше.")
-	}
-}

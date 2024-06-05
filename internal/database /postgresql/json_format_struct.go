@@ -1,13 +1,3 @@
-package main
-
-import (
-	//"database/sql"
-	"encoding/json"
-	"fmt"
-	//"log"
-
-	_ "github.com/lib/pq"
-)
 
 type Delivery struct {
 	Name    string `json:"name"`
@@ -62,26 +52,3 @@ type Order struct {
 	DateCreated      string    `json:"date_created"`
 	OofShard         string    `json:"oof_shard"`
 }
-
-func main() {
-    u := Order{}
-		u.TrackNumber = "123"
-
-    bs, _ := json.Marshal(u)
-
-    fmt.Println(string(bs),"<Ответ JSON",) 
-}
-
-template_html, err := template.ParseFiles("templates/order_details.html")
-	if err != nil {
-		panic(err)
-	}
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		template_html.Execute(w, nil)
-	})
-
-	http.ListenAndServe(":8080", nil)
-
-
-	
